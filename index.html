@@ -16,7 +16,7 @@
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
         }
-        /* Custom styles for the brand. */
+        /* Custom styles for the brand */
         :root {
             --brand-pink: #E80073;
             --brand-dark: #323232;
@@ -153,15 +153,15 @@
                 <p class="text-gray-500 mb-6">Agora, posicione a Starta no termômetro da marca. Arraste para o lado que mais combina.</p>
                 <div class="space-y-8 mt-8" id="termometro-options">
                     <div class="w-full">
-                        <div class="flex justify-between text-sm font-semibold text-gray-600 px-1"><span>Formal</span><span>Casual</span></div>
+                        <div class="flex justify-between text-sm font-semibold text-gray-600 px-1"><span>Formal</span><span class="font-bold text-brand-pink" id="formal-casual-value">50%</span><span>Casual</span></div>
                         <input type="range" name="formal-casual" min="0" max="100" value="50" class="w-full">
                     </div>
                     <div class="w-full">
-                        <div class="flex justify-between text-sm font-semibold text-gray-600 px-1"><span>Séria</span><span>Bem-humorada</span></div>
+                        <div class="flex justify-between text-sm font-semibold text-gray-600 px-1"><span>Séria</span><span class="font-bold text-brand-pink" id="seria-humorada-value">50%</span><span>Bem-humorada</span></div>
                         <input type="range" name="seria-humorada" min="0" max="100" value="50" class="w-full">
                     </div>
                     <div class="w-full">
-                        <div class="flex justify-between text-sm font-semibold text-gray-600 px-1"><span>Tradicional</span><span>Inovadora</span></div>
+                        <div class="flex justify-between text-sm font-semibold text-gray-600 px-1"><span>Tradicional</span><span class="font-bold text-brand-pink" id="tradicional-inovadora-value">50%</span><span>Inovadora</span></div>
                         <input type="range" name="tradicional-inovadora" min="0" max="100" value="50" class="w-full">
                     </div>
                 </div>
@@ -219,6 +219,7 @@
                         <option value="Profissionais liberais e da saúde">Profissionais liberais e da saúde</option>
                         <option value="Outro">Outro</option>
                     </select>
+                    <textarea id="cliente-outro-input" class="hidden w-full mt-4 p-3 border-2 border-gray-200 rounded-lg focus:ring-brand-pink focus:border-brand-pink" rows="2" placeholder="Por favor, especifique qual..."></textarea>
                 </div>
                  <div class="mt-8 flex justify-between">
                     <button onclick="prevStep()" class="bg-gray-300 text-gray-800 font-bold py-2 px-8 rounded-lg hover:bg-gray-400 transition-colors">← Voltar</button>
@@ -337,7 +338,12 @@
                     isValid = document.querySelector('input[name="style"]:checked') !== null;
                     break;
                 case 7:
-                    isValid = document.getElementById('cliente-select').value !== '';
+                    const clienteSelect = document.getElementById('cliente-select');
+                    if (clienteSelect.value === 'Outro') {
+                        isValid = document.getElementById('cliente-outro-input').value.trim() !== '';
+                    } else {
+                        isValid = clienteSelect.value !== '';
+                    }
                     break;
                 case 9:
                     isValid = document.getElementById('inspiracao-input').value.trim() !== '';
@@ -370,7 +376,12 @@
                     quizAnswers.estilo = document.querySelector('input[name="style"]:checked').value;
                     break;
                 case 7:
-                    quizAnswers.cliente = document.getElementById('cliente-select').value;
+                    const clienteSelect = document.getElementById('cliente-select');
+                    if (clienteSelect.value === 'Outro') {
+                        quizAnswers.cliente = document.getElementById('cliente-outro-input').value;
+                    } else {
+                        quizAnswers.cliente = clienteSelect.value;
+                    }
                     break;
                 case 8:
                     const contentItems = document.querySelectorAll('#content-list .draggable h4');
@@ -405,11 +416,29 @@
                         });
                     });
                     break;
+                case 5:
+                    stepDiv.querySelectorAll('input[type="range"]').forEach(slider => {
+                        const valueSpan = document.getElementById(`${slider.name}-value`);
+                        slider.addEventListener('input', () => {
+                            valueSpan.textContent = `${slider.value}%`;
+                        });
+                    });
+                    break;
                 case 6:
                     stepDiv.querySelector('#style-options').addEventListener('change', validateCurrentStep);
                     break;
                 case 7:
-                    stepDiv.querySelector('#cliente-select').addEventListener('change', validateCurrentStep);
+                    const clienteSelect = stepDiv.querySelector('#cliente-select');
+                    const outroInput = stepDiv.querySelector('#cliente-outro-input');
+                    clienteSelect.addEventListener('change', () => {
+                        if (clienteSelect.value === 'Outro') {
+                            outroInput.classList.remove('hidden');
+                        } else {
+                            outroInput.classList.add('hidden');
+                        }
+                        validateCurrentStep();
+                    });
+                    outroInput.addEventListener('input', validateCurrentStep);
                     break;
                 case 9:
                     stepDiv.querySelector('#inspiracao-input').addEventListener('input', validateCurrentStep);
@@ -458,6 +487,7 @@
             Object.keys(quizAnswers).forEach(key => delete quizAnswers[key]);
             document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(el => el.checked = false);
             document.querySelectorAll('textarea, select').forEach(el => el.value = '');
+            document.getElementById('cliente-outro-input').classList.add('hidden');
             showStep(currentStep);
             updateProgress();
         }
